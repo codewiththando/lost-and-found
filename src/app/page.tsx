@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default async function Home() {
   const { data: items, error } = await supabase
@@ -29,24 +30,36 @@ export default async function Home() {
         {items?.map((item) => (
           <div
             key={item.id}
-            className="border border-zinc-200 rounded-lg p-4 flex justify-between items-start"
+            className="border border-zinc-200 rounded-lg p-4 flex gap-4 items-start"
           >
-            <div>
-              <span
-                className={`text-xs font-semibold uppercase px-2 py-1 rounded ${
-                  item.type === 'lost'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-green-100 text-green-700'
-                }`}
-              >
-                {item.type}
+            {item.image_url && (
+              <Image
+                src={item.image_url}
+                alt={item.description}
+                width={80}
+                height={80}
+                className="rounded-md object-cover w-20 h-20 flex-shrink-0"
+              />
+            )}
+
+            <div className="flex-1 flex justify-between items-start">
+              <div>
+                <span
+                  className={`text-xs font-semibold uppercase px-2 py-1 rounded ${
+                    item.type === 'lost'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-green-100 text-green-700'
+                  }`}
+                >
+                  {item.type}
+                </span>
+                <p className="mt-2 font-medium">{item.description}</p>
+                <p className="text-sm text-zinc-500">{item.location}</p>
+              </div>
+              <span className="text-xs text-zinc-400">
+                {new Date(item.created_at).toLocaleDateString()}
               </span>
-              <p className="mt-2 font-medium">{item.description}</p>
-              <p className="text-sm text-zinc-500">{item.location}</p>
             </div>
-            <span className="text-xs text-zinc-400">
-              {new Date(item.created_at).toLocaleDateString()}
-            </span>
           </div>
         ))}
       </div>
