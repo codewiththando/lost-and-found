@@ -9,6 +9,7 @@ export default function PostItem() {
   const [description, setDescription] = useState('')
   const [type, setType] = useState('lost')
   const [location, setLocation] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -28,11 +29,37 @@ export default function PostItem() {
     setSubmitting(true)
     setMessage('')
 
+    let imageUrl: string | null = null
+
+    // If a file was selected, upload it first
+    if (file) {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(fileName, file)
+
+      if (uploadError) {
+        setSubmitting(false)
+        setMessage('Upload error: ' + uploadError.message)
+        return
+      }
+
+      // Get the public URL for the uploaded file
+      const { data: publicUrlData } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(fileName)
+
+      imageUrl = publicUrlData.publicUrl
+    }
+
     const { error } = await supabase.from('items').insert({
       description,
       type,
       location,
       user_id: user.id,
+      image_url: imageUrl,
     })
 
     setSubmitting(false)
@@ -44,6 +71,7 @@ export default function PostItem() {
       setDescription('')
       setType('lost')
       setLocation('')
+      setFile(null)
     }
   }
 
@@ -81,6 +109,15 @@ export default function PostItem() {
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Library, 2nd floor"
             required
+          />
+        </label>
+
+        <label>
+          Photo (optional):
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </label>
 
