@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/context/AuthContext'
 
 export default function PostItem() {
   const [description, setDescription] = useState('')
@@ -10,8 +12,19 @@ export default function PostItem() {
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login')
+    }
+  }, [loading, user, router])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!user) return
+
     setSubmitting(true)
     setMessage('')
 
@@ -19,6 +32,7 @@ export default function PostItem() {
       description,
       type,
       location,
+      user_id: user.id,
     })
 
     setSubmitting(false)
@@ -32,6 +46,9 @@ export default function PostItem() {
       setLocation('')
     }
   }
+
+  if (loading) return <p style={{ padding: '2rem' }}>Loading...</p>
+  if (!user) return null
 
   return (
     <div style={{ padding: '2rem', maxWidth: '500px' }}>
