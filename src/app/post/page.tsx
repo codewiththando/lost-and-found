@@ -30,9 +30,11 @@ export default function PostItem() {
     setMessage('')
 
     let imageUrl: string | null = null
+    let embedding: number[] | null = null
 
-    // If a file was selected, upload it first
     if (file) {
+      setMessage('Uploading image...')
+
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}-${Date.now()}.${fileExt}`
 
@@ -46,13 +48,35 @@ export default function PostItem() {
         return
       }
 
-      // Get the public URL for the uploaded file
       const { data: publicUrlData } = supabase.storage
         .from('item-images')
         .getPublicUrl(fileName)
 
       imageUrl = publicUrlData.publicUrl
+
+      setMessage('Analyzing image with AI (this can take up to 30s on first use)...')
+
+      try {
+        const embedRes = await fetch('/api/embed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl }),
+        })
+
+        const embedData = await embedRes.json()
+
+        if (embedRes.ok && embedData.embedding) {
+          const raw = embedData.embedding
+          embedding = Array.isArray(raw[0]) ? raw.flat() : raw
+        } else {
+          console.warn('Embedding failed, continuing without it:', embedData.error)
+        }
+      } catch (err) {
+        console.warn('Embedding request failed, continuing without it:', err)
+      }
     }
+
+    setMessage('Saving item...')
 
     const { error } = await supabase.from('items').insert({
       description,
@@ -60,6 +84,7 @@ export default function PostItem() {
       location,
       user_id: user.id,
       image_url: imageUrl,
+      embedding: embedding ? JSON.stringify(embedding) : null,
     })
 
     setSubmitting(false)
@@ -113,7 +138,7 @@ export default function PostItem() {
         </label>
 
         <label>
-          Photo (optional):
+          Photo (optional, but needed for AI matching):
           <input
             type="file"
             accept="image/*"
