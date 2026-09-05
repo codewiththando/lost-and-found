@@ -55,6 +55,15 @@ export default async function Home() {
                 </span>
                 <p className="mt-2 font-medium">{item.description}</p>
                 <p className="text-sm text-zinc-500">{item.location}</p>
+
+                {item.embedding && (
+                  <Link
+                    href={`/matches/${item.id}`}
+                    className="inline-block mt-2 text-sm text-blue-600 hover:underline"
+                  >
+                    Find Matches →
+                  </Link>
+                )}
               </div>
               <span className="text-xs text-zinc-400">
                 {new Date(item.created_at).toLocaleDateString()}

@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 
+let embedderPromise: any = null
+
+async function getEmbedder() {
+  if (!embedderPromise) {
+    const { pipeline } = await import('@huggingface/transformers')
+    embedderPromise = pipeline(
+      'image-feature-extraction',
+      'Xenova/clip-vit-base-patch32'
+    )
+  }
+  return embedderPromise
+}
+
 export default function PostItem() {
   const [description, setDescription] = useState('')
   const [type, setType] = useState('lost')
@@ -54,25 +67,23 @@ export default function PostItem() {
 
       imageUrl = publicUrlData.publicUrl
 
-      setMessage('Analyzing image with AI (this can take up to 30s on first use)...')
+      setMessage('Analyzing image with AI (first time may take 30-60s to download the model)...')
 
       try {
-        const embedRes = await fetch('/api/embed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl }),
+        const extractor = await getEmbedder()
+
+        const objectUrl = URL.createObjectURL(file)
+
+        const output = await extractor(objectUrl, {
+          pooling: 'mean',
+          normalize: true,
         })
 
-        const embedData = await embedRes.json()
+        URL.revokeObjectURL(objectUrl)
 
-        if (embedRes.ok && embedData.embedding) {
-          const raw = embedData.embedding
-          embedding = Array.isArray(raw[0]) ? raw.flat() : raw
-        } else {
-          console.warn('Embedding failed, continuing without it:', embedData.error)
-        }
+        embedding = Array.from(output.data as Float32Array)
       } catch (err) {
-        console.warn('Embedding request failed, continuing without it:', err)
+        console.warn('Embedding failed, continuing without it:', err)
       }
     }
 

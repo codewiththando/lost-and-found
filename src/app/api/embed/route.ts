@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { pipeline } from '@huggingface/transformers'
+import { pipeline, RawImage } from '@huggingface/transformers'
+import sharp from 'sharp'
 
-// We load the model once and reuse it across requests, instead of
-// reloading it every single time (which would be very slow).
 let embedder: any = null
 
 async function getEmbedder() {
@@ -25,11 +24,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'imageUrl is required' }, { status: 400 })
     }
 
-    console.log('Generating embedding for', imageUrl)
+    console.log('Fetching image:', imageUrl)
+    const imageResponse = await fetch(imageUrl)
+    const rawBuffer = Buffer.from(await imageResponse.arrayBuffer())
 
+    console.log('Decoding image into raw pixels with sharp...')
+    const { data, info } = await sharp(rawBuffer)
+      .toColourspace('srgb')
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+
+    // Build a RawImage directly from decoded pixel data.
+    // This completely bypasses any URL/file loading inside the model,
+    // which is what was failing before.
+    const image = new RawImage(
+      new Uint8ClampedArray(data),
+      info.width,
+      info.height,
+      info.channels
+    )
+
+    console.log('Generating embedding...')
     const extractor = await getEmbedder()
 
-    const output = await extractor(imageUrl, {
+    const output = await extractor(image, {
       pooling: 'mean',
       normalize: true,
     })
