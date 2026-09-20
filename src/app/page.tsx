@@ -9,68 +9,85 @@ export default async function Home() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Lost & Found</h1>
+    <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="flex justify-between items-end mb-2">
+        <h1
+          className="text-3xl text-[#1C2530]"
+          style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}
+        >
+          Lost &amp; Found
+        </h1>
         <Link
           href="/post"
-          className="bg-black text-white px-4 py-2 rounded-lg hover:bg-zinc-800"
+          className="bg-[#2C5F8A] text-white px-4 py-2 rounded hover:bg-[#244d70] text-sm"
         >
-          Post an Item
+          Post an item
         </Link>
       </div>
+      <p className="text-[#647184] mb-10">
+        Find what&apos;s missing. Return what you found.
+      </p>
 
-      {error && <p className="text-red-500">Error: {error.message}</p>}
+      {error && <p className="text-[#A8503E]">Error: {error.message}</p>}
 
       {items && items.length === 0 && (
-        <p className="text-zinc-500">No items posted yet. Be the first!</p>
+        <p className="text-[#647184] border border-dashed border-[#E2E6EB] rounded p-8 text-center">
+          No items posted yet. Be the first.
+        </p>
       )}
 
-      <div className="flex flex-col gap-4">
-        {items?.map((item) => (
-          <div
-            key={item.id}
-            className="border border-zinc-200 rounded-lg p-4 flex gap-4 items-start"
-          >
-            {item.image_url && (
-              <Image
-                src={item.image_url}
-                alt={item.description}
-                width={80}
-                height={80}
-                className="rounded-md object-cover w-20 h-20 flex-shrink-0"
+      <div className="flex flex-col gap-3">
+        {items?.map((item) => {
+          const statusColor = item.type === 'lost' ? '#A8503E' : '#2C5F8A'
+          return (
+            <div
+              key={item.id}
+              className="bg-white border border-[#E2E6EB] rounded flex gap-4 p-4 pl-5 relative overflow-hidden"
+            >
+              <span
+                className="absolute left-0 top-0 bottom-0 w-1"
+                style={{ backgroundColor: statusColor }}
               />
-            )}
 
-            <div className="flex-1 flex justify-between items-start">
-              <div>
-                <span
-                  className={`text-xs font-semibold uppercase px-2 py-1 rounded ${
-                    item.type === 'lost'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-green-100 text-green-700'
-                  }`}
-                >
-                  {item.type}
-                </span>
-                <p className="mt-2 font-medium">{item.description}</p>
-                <p className="text-sm text-zinc-500">{item.location}</p>
+              {item.image_url && (
+                <Image
+                  src={item.image_url}
+                  alt={item.description}
+                  width={72}
+                  height={72}
+                  className="rounded object-cover w-[72px] h-[72px] flex-shrink-0"
+                />
+              )}
 
-                {item.embedding && (
-                  <Link
-                    href={`/matches/${item.id}`}
-                    className="inline-block mt-2 text-sm text-blue-600 hover:underline"
+              <div className="flex-1 flex justify-between items-start">
+                <div>
+                  <span
+                    className="text-xs font-medium uppercase tracking-wide"
+                    style={{ color: statusColor }}
                   >
-                    Find Matches →
-                  </Link>
-                )}
+                    {item.type}
+                  </span>
+                  <p className="mt-1 font-medium text-[#1C2530]">
+                    {item.description}
+                  </p>
+                  <p className="text-sm text-[#647184]">{item.location}</p>
+
+                  {item.embedding && (
+                    <Link
+                      href={`/matches/${item.id}`}
+                      className="inline-block mt-2 text-sm text-[#2C5F8A] hover:underline"
+                    >
+                      Find matches
+                    </Link>
+                  )}
+                </div>
+                <span className="text-xs text-[#647184] whitespace-nowrap ml-4">
+                  {new Date(item.created_at).toLocaleDateString()}
+                </span>
               </div>
-              <span className="text-xs text-zinc-400">
-                {new Date(item.created_at).toLocaleDateString()}
-              </span>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

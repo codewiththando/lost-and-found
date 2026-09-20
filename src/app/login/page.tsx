@@ -33,38 +33,53 @@ export default function Login() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '400px' }}>
-      <h1>Log In</h1>
-      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <label>
-          Email:
+    <div className="max-w-sm mx-auto mt-16 px-6">
+      <h1
+        className="text-2xl text-[#1C2530] mb-6"
+        style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}
+      >
+        Log in
+      </h1>
+
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1 text-sm text-[#647184]">
+          Email
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="border border-[#E2E6EB] rounded px-3 py-2 text-[#1C2530] bg-white focus:outline-none focus:border-[#2C5F8A]"
           />
         </label>
 
-        <label>
-          Password:
+        <label className="flex flex-col gap-1 text-sm text-[#647184]">
+          Password
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="border border-[#E2E6EB] rounded px-3 py-2 text-[#1C2530] bg-white focus:outline-none focus:border-[#2C5F8A]"
           />
         </label>
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Log In'}
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-[#2C5F8A] text-white rounded px-4 py-2 mt-2 hover:bg-[#244d70] disabled:opacity-60"
+        >
+          {loading ? 'Logging in...' : 'Log in'}
         </button>
 
-        {message && <p>{message}</p>}
+        {message && <p className="text-sm text-[#A8503E]">{message}</p>}
       </form>
 
-      <p style={{ marginTop: '1rem' }}>
-        Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+      <p className="text-sm text-[#647184] mt-6">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="text-[#2C5F8A] hover:underline">
+          Sign up
+        </Link>
       </p>
     </div>
   )
